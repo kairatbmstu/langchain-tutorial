@@ -1,0 +1,116 @@
+Here’s **comprehensive information about Presight AI** — what it is, what it does, its business, growth, and recent activities (especially relevant to Kazakhstan and globally):
+
+---
+
+## 📌 **What Is Presight AI?**
+
+**Presight AI Holding PLC** is a **global big‑data analytics and artificial intelligence company** headquartered in **Abu Dhabi, United Arab Emirates**. It combines **big data, advanced analytics, generative AI (GenAI)**, and machine learning to turn complex datasets into actionable insights for governments, enterprises, and institutions. ([See the Future Today][1])
+
+* Founded: **2020**. ([agbi.com][2])
+* Majority owned by **G42 (Group 42 Holding)**, a major UAE AI development firm. ([agbi.com][2])
+* Listed publicly on the **Abu Dhabi Securities Exchange (ADX)** since **March 2023**. ([agbi.com][2])
+* Offices and operations span globally across **Middle East, Central Asia, Africa, and other regions**. ([See the Future Today][3])
+
+---
+
+## 🧠 **What Presight Does**
+
+### 🔍 **AI & Data Analytics Solutions**
+
+Presight’s core offerings include:
+
+**• Big‑data analytics + GenAI solutions** – Transforming data into insights for strategic decision‑making across sectors. ([See the Future Today][1])
+**• Enterprise‑grade AI platforms** — Including analytics tools that integrate with existing data infrastructure, enforce governance, and support compliance. ([Presight][4])
+**• AI‑powered predictive analytics & machine learning** — Applied to public services, energy, climate, finance, smart cities, and education. ([See the Future Today][1])
+**• Sovereign, secure deployments** — Can be deployed on‑premises, in private clouds, or air‑gapped environments for sensitive use cases. ([See the Future Today][1])
+
+Their technology emphasizes **trusted data, zero “AI hallucinations”, security compliance, and scalable enterprise deployment.** ([Presight][4])
+
+---
+
+## 📊 **Core Markets & Sectors**
+
+Presight’s platforms and services are used in:
+
+* **Public services and government analytics**
+* **Energy & climate optimization**
+* **Finance / risk & compliance systems**
+* **Smart city infrastructure & digital transformation**
+* **Education & workforce analytics** ([See the Future Today][1])
+
+They also work on large enterprise use cases where security, governance, and real‑time data insights matter. ([Presight][4])
+
+---
+
+## 🌍 **Global Growth & Impact**
+
+### 💼 Company Scale & Financials
+
+* In **2025**, Presight reported **~36.9 % annual revenue growth**, reaching over **AED 3 billion** (~USD 817 m). ([LinkedIn][5])
+* International revenue grew significantly, showing expanding global footprint. ([LinkedIn][5])
+
+### 🌐 Geographic Presence
+
+Presight has engagements and deployments across **15+ countries** on multiple continents, serving public sector and private sector clients. ([See the Future Today][3])
+
+---
+
+## 🇰🇿 **Presight AI in Kazakhstan**
+
+Presight has been **actively expanding in Kazakhstan**, including:
+
+### 📍 Regional Office & R&D
+
+* Presight **opened a regional office in Astana (capital of Kazakhstan)** to support AI, analytics, and national digital projects. ([https://www.onearabia.me/][6])
+* They also established an **R&D laboratory focused on AI innovation and digital governance** with local partners. ([https://www.onearabia.me/][7])
+
+### 🤝 Strategic Partnerships
+
+* **Joint ventures with Kazakhstan’s sovereign fund Samruk‑Kazyna** to accelerate digital transformation, improve infrastructure, and apply AI across energy, utilities, transport, and public services sectors. ([See the Future Today][8])
+
+### 🖥 AI Supercomputer and Data Center Projects
+
+* Presight signed agreements with Kazakhstan’s Ministry of Digital Development (along with Samruk‑Kazyna) to **build an advanced AI supercomputer and data center cluster**, strengthening national computing infrastructure and digital capabilities. ([See the Future Today][9])
+
+These initiatives aim to support **smart cities, e‑government, and national data sovereignty.** ([https://www.onearabia.me/][7])
+
+---
+
+## 🧪 Strategic Tech and Partnerships
+
+Presight collaborates with global tech firms and institutions to expand its capabilities and market reach, including partnerships with:
+
+* Intel
+* Dell
+* Technology partners in AI and analytics sectors
+  … as part of broad ecosystem growth. ([agbi.com][2])
+
+They also have proprietary platforms and AI models tailored for enterprise intelligence.
+
+---
+
+## 📌 **Summary**
+
+**Presight AI** is a **major AI and data analytics company** with:
+
+✔️ Global operations & international projects
+✔️ AI solutions for enterprise and government
+✔️ Emphasis on security, governance, and scalability
+✔️ Growing footprint in **Kazakhstan and Central Asia**
+✔️ Listed public company backed by UAE AI ecosystem
+
+---
+
+If you want, I can also **explain how their AI platforms work in detail** (e.g., enterprise integrations, compliance features), or how this impacts **Kazakhstan’s digital economy** specifically.
+
+[1]: https://www.presight.ai/?utm_source=chatgpt.com "Presight AI | See the Future Today"
+[2]: https://www.agbi.com/companies/presight-ai/?utm_source=chatgpt.com "Presight News and Company Profile | AGBI"
+[3]: https://www.presight.ai/wp-content/uploads/2025/09/Presight_Investor_Presentation_September2025vFinal.pdf?utm_source=chatgpt.com "Investor 
+Presentation 
+PUBLIC"
+[4]: https://www.presight.io/?utm_source=chatgpt.com "Presight - The AI Data Analyst for Enterprises"
+[5]: https://kz.linkedin.com/company/presight-ai?utm_source=chatgpt.com "Presight | LinkedIn"
+[6]: https://www.onearabia.me/business/presight-opens-regional-office-in-astana-011-109297.html?utm_source=chatgpt.com "Presight Opens Regional Office In Astana To Enhance AI Initiatives - OneArabia"
+[7]: https://www.onearabia.me/local/presight-launches-rd-laboratory-in-kazakhstan-011-128179.html?utm_source=chatgpt.com "Presight Launches R&D Laboratory In Kazakhstan For AI Innovation - OneArabia"
+[8]: https://www.presight.ai/news/presight-and-samruk-kazyna-jsc-announce-a-joint-venture-to-accelerate-digital-transformation-in-kazakhstan-in-the-presence-of-the-president-of-kazakhstan/?utm_source=chatgpt.com "Presight and Samruk Kazyna JSC announce a joint venture to accelerate digital transformation in Kazakhstan in the presence of the President of Kazakhstan | See the Future Today"
+[9]: https://www.presight.ai/news/presight-and-samruk-kazyna-sign-agreement-with-kazakhstans-ministry-of-digital-development-to-build-an-advanced-ai-supercomputer-in-kazakhstan/?utm_source=chatgpt.com "Presight to Build AI Supercomputer in Kazakhstan"

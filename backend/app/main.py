@@ -1,12 +1,10 @@
 import os
 import uuid
 
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-
-from pypdf import PdfReader
 
 from app.database import engine, get_db, Base
 from app import models, schemas, crud
@@ -22,6 +20,8 @@ from app.auth import (
     verify_google_token,
 )
 from app.drive import get_auth_url, exchange_code, make_drive_tools
+from app.module.file.processor import process_upload
+from app.module.knowledgebase.processor import import_file_to_knowledgebase
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -222,15 +222,17 @@ def list_messages(chat_id: int, current_user: dict = Depends(require_user), db: 
     return crud.get_messages(db, chat_id)
 
 
-@app.post("/api/upload")
-def upload_pdf(
+@app.post("/api/upload", response_model=schemas.UploadResponse)
+def upload_file(
     file: UploadFile = File(...),
     chat_id: int = Form(None),
     current_user: dict = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(400, "Only PDF files are accepted")
+    ext = os.path.splitext(file.filename)[1].lower()
+    allowed = {".pdf", ".docx", ".pptx", ".html", ".htm", ".csv", ".xls", ".xlsx", ".json", ".txt", ".md", ".png", ".jpg", ".jpeg", ".gif", ".webp"}
+    if ext not in allowed:
+        raise HTTPException(400, f"File type '{ext}' is not supported. Supported: {', '.join(allowed)}")
 
     if chat_id:
         chat = db.query(models.Chat).join(models.Topic).filter(
@@ -240,33 +242,26 @@ def upload_pdf(
         if not chat:
             raise HTTPException(404, "Chat not found")
 
-    ext = os.path.splitext(file.filename)[1]
     stored_name = f"{uuid.uuid4().hex}{ext}"
-    filepath = os.path.join(UPLOAD_DIR, stored_name)
-
     raw = file.file.read()
-    with open(filepath, "wb") as f:
-        f.write(raw)
 
-    text = ""
-    try:
-        import io
-        reader = PdfReader(io.BytesIO(raw))
-        for page in reader.pages:
-            t = page.extract_text()
-            if t:
-                text += t + "\n"
-    except Exception as e:
-        text = f"[PDF text extraction failed: {e}]"
+    if len(raw) > 50 * 1024 * 1024:
+        raise HTTPException(413, "File too large (max 50MB)")
 
-    if chat_id:
-        crud.save_pdf_document(db, chat_id, stored_name, file.filename, text)
+    result = process_upload(db, raw, stored_name, file.filename, chat_id) if chat_id else {"filename": stored_name, "original_name": file.filename, "text_length": 0, "deduped": False}
+
+    if not chat_id:
+        filepath = os.path.join(UPLOAD_DIR, stored_name)
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        with open(filepath, "wb") as f:
+            f.write(raw)
 
     return {
-        "filename": stored_name,
-        "original_name": file.filename,
-        "url": f"/uploads/{stored_name}",
-        "text_length": len(text),
+        "filename": result["filename"],
+        "original_name": result["original_name"],
+        "url": f"/uploads/{result['filename']}",
+        "text_length": result["text_length"],
+        "deduped": result.get("deduped", False),
     }
 
 
@@ -274,6 +269,7 @@ def upload_pdf(
 def send_message(
     chat_id: int,
     body: schemas.SendMessage,
+    kb_id: int = Query(None, description="Knowledgebase ID for RAG"),
     current_user: dict = Depends(require_user),
     db: Session = Depends(get_db),
 ):
@@ -285,23 +281,21 @@ def send_message(
         raise HTTPException(404, "Chat not found")
 
     user_msg = crud.save_message(db, chat_id, "user", body.content)
-
     history = crud.get_messages(db, chat_id)
 
-    pdf_texts = crud.get_pdf_texts(db, chat_id)
-    pdf_context = ""
-    if pdf_texts:
-        sections = []
-        for doc in pdf_texts:
-            sections.append(f"--- Content of {doc.original_name} ---\n{doc.text_content}")
-        pdf_context = "\n\n".join(sections)
+    has_docs = db.query(models.PdfDocument).filter(models.PdfDocument.chat_id == chat_id).first() is not None
+    rag_enabled = has_docs or kb_id is not None
 
     langchain_messages = []
-    if pdf_context:
+
+    if has_docs or kb_id:
         from langchain_core.messages import SystemMessage
-        langchain_messages.append(SystemMessage(
-            content=f"DO NOT call search_web or any other tool. The PDF content is right here \u2014 use it directly to answer.\n\n{pdf_context}"
-        ))
+        parts = []
+        if has_docs:
+            parts.append("You have access to uploaded files in this chat. Use the search_session_files tool to find relevant content.")
+        if kb_id:
+            parts.append(f"You also have access to knowledge base #{kb_id}. Use search_knowledgebase_tool(kb_id={kb_id}, query=...) to search it.")
+        langchain_messages.append(SystemMessage(content=" ".join(parts)))
 
     for m in history:
         if m.role == "user":
@@ -315,7 +309,7 @@ def send_message(
         models.DriveToken.user_id == current_user["user_id"]
     ).first()
     drive_tools = make_drive_tools(token_row) if token_row else None
-    graph = build_graph(extra_tools=drive_tools)
+    graph = build_graph(rag_enabled=rag_enabled, extra_tools=drive_tools)
 
     thread_id = f"chat-{chat_id}"
     config = {"configurable": {"thread_id": thread_id}}
@@ -327,6 +321,19 @@ def send_message(
 
     ai_content = result["messages"][-1].content
     ai_msg = crud.save_message(db, chat_id, "assistant", ai_content)
+
+    tool_calls = []
+    for msg in result["messages"]:
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            for tc in msg.tool_calls:
+                tool_calls.append({
+                    "tool": tc.get("name", "unknown"),
+                    "args": tc.get("args", {}),
+                })
+        elif msg.type == "tool":
+            if tool_calls and "result" not in tool_calls[-1]:
+                content = msg.content[:500] if msg.content else ""
+                tool_calls[-1]["result"] = content.strip()[:200]
 
     if chat.title == "New Chat":
         title_text = body.content[:50]
@@ -350,4 +357,93 @@ def send_message(
             "content": ai_msg.content,
             "created_at": ai_msg.created_at.isoformat(),
         },
+        "tool_calls": tool_calls if tool_calls else None,
     }
+
+
+# ─── Knowledgebase endpoints ─────────────────────────────────────
+
+
+@app.post("/api/knowledgebases", response_model=schemas.KnowledgebaseOut)
+def create_knowledgebase(body: schemas.KnowledgebaseCreate, current_user: dict = Depends(require_user), db: Session = Depends(get_db)):
+    kb = models.Knowledgebase(
+        user_id=current_user["user_id"],
+        name=body.name,
+        description=body.description,
+        index_method=body.index_method,
+        retrieval_mode=body.retrieval_mode,
+        embedding_model=body.embedding_model,
+        is_public=body.is_public,
+    )
+    db.add(kb)
+    db.commit()
+    db.refresh(kb)
+    return kb
+
+
+@app.get("/api/knowledgebases", response_model=list[schemas.KnowledgebaseOut])
+def list_knowledgebases(current_user: dict = Depends(require_user), db: Session = Depends(get_db)):
+    return db.query(models.Knowledgebase).filter(
+        models.Knowledgebase.user_id == current_user["user_id"]
+    ).order_by(models.Knowledgebase.updated_at.desc()).all()
+
+
+@app.get("/api/knowledgebases/{kb_id}", response_model=schemas.KnowledgebaseOut)
+def get_knowledgebase(kb_id: int, current_user: dict = Depends(require_user), db: Session = Depends(get_db)):
+    kb = db.query(models.Knowledgebase).filter(
+        models.Knowledgebase.id == kb_id,
+        models.Knowledgebase.user_id == current_user["user_id"],
+    ).first()
+    if not kb:
+        raise HTTPException(404, "Knowledgebase not found")
+    return kb
+
+
+@app.delete("/api/knowledgebases/{kb_id}")
+def delete_knowledgebase(kb_id: int, current_user: dict = Depends(require_user), db: Session = Depends(get_db)):
+    kb = db.query(models.Knowledgebase).filter(
+        models.Knowledgebase.id == kb_id,
+        models.Knowledgebase.user_id == current_user["user_id"],
+    ).first()
+    if not kb:
+        raise HTTPException(404, "Knowledgebase not found")
+    from app.module.knowledgebase.search import delete_kb_index
+    delete_kb_index(kb_id)
+    db.delete(kb)
+    db.commit()
+    return {"ok": True}
+
+
+@app.post("/api/knowledgebases/{kb_id}/import", response_model=schemas.KnowledgebaseImportResponse)
+def import_to_knowledgebase(
+    kb_id: int,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    kb = db.query(models.Knowledgebase).filter(
+        models.Knowledgebase.id == kb_id,
+        models.Knowledgebase.user_id == current_user["user_id"],
+    ).first()
+    if not kb:
+        raise HTTPException(404, "Knowledgebase not found")
+
+    raw = file.file.read()
+    if len(raw) > 50 * 1024 * 1024:
+        raise HTTPException(413, "File too large (max 50MB)")
+
+    result = import_file_to_knowledgebase(db, kb_id, raw, file.filename, current_user["user_id"])
+    return result
+
+
+@app.get("/api/knowledgebases/{kb_id}/files", response_model=list[schemas.KnowledgebaseFileOut])
+def list_kb_files(kb_id: int, current_user: dict = Depends(require_user), db: Session = Depends(get_db)):
+    kb = db.query(models.Knowledgebase).filter(
+        models.Knowledgebase.id == kb_id,
+        models.Knowledgebase.user_id == current_user["user_id"],
+    ).first()
+    if not kb:
+        raise HTTPException(404, "Knowledgebase not found")
+    return db.query(models.KnowledgebaseFile).filter(
+        models.KnowledgebaseFile.knowledgebase_id == kb_id
+    ).order_by(models.KnowledgebaseFile.created_at.desc()).all()

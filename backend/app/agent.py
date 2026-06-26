@@ -9,6 +9,7 @@ from langchain_core.messages import BaseMessage, SystemMessage
 
 from app.config import OLLAMA_BASE_URL, LLM_MODEL
 from app.tools import search_web, read_pdf, tarot_reading
+from app.module.file_qa_tools import search_session_files, search_knowledgebase_tool, fetch_adjacent_chunks
 
 
 class AgentState(TypedDict):
@@ -16,11 +17,13 @@ class AgentState(TypedDict):
 
 
 base_tools = [search_web, read_pdf, tarot_reading]
+rag_tools = [search_session_files, search_knowledgebase_tool, fetch_adjacent_chunks]
 
 
-def build_graph(extra_tools: list | None = None):
-    all_tools = base_tools + (extra_tools or [])
-    pdf_safe_tools = [read_pdf, tarot_reading] + (extra_tools or [])
+def build_graph(rag_enabled: bool = False, extra_tools: list | None = None):
+    active_tools = base_tools + rag_tools if rag_enabled else base_tools
+    all_tools = active_tools + (extra_tools or [])
+    pdf_safe_tools = [read_pdf, tarot_reading, search_session_files] + (extra_tools or [])
 
     tool_node = ToolNode(all_tools)
 

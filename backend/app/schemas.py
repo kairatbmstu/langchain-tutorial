@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 import datetime
 
 
@@ -68,3 +68,56 @@ class AuthResponse(BaseModel):
     token: str
     user_id: int
     email: str
+
+
+class KnowledgebaseCreate(BaseModel):
+    name: str
+    description: str = ""
+    index_method: str = "semantic"
+    retrieval_mode: str = "hybrid"
+    embedding_model: str = "text-embedding-3-large"
+    is_public: bool = False
+
+
+class KnowledgebaseOut(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    description: str
+    index_method: str
+    retrieval_mode: str
+    embedding_model: str
+    is_public: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class KnowledgebaseFileOut(BaseModel):
+    id: int
+    knowledgebase_id: int
+    original_name: str
+    content_type: str | None
+    file_size: int | None
+    status: str
+    summary: str | None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UploadResponse(BaseModel):
+    filename: str
+    original_name: str
+    text_length: int
+    deduped: bool = False
+
+
+class KnowledgebaseImportResponse(BaseModel):
+    status: str
+    file_id: int | None = None
+    chunks: int | None = None
+    error: str | None = None

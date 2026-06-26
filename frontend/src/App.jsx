@@ -17,6 +17,10 @@ export default function App() {
   const [sending, setSending] = useState(false)
   const [driveConnected, setDriveConnected] = useState(false)
 
+  const [knowledgebases, setKnowledgebases] = useState([])
+  const [activeKbId, setActiveKbId] = useState(null)
+  const [kbFiles, setKbFiles] = useState({})
+
   api.setToken(token)
 
   const handleAuth = (newToken, newUserId, newEmail) => {
@@ -40,6 +44,8 @@ export default function App() {
     setTopics([])
     setChats([])
     setMessages([])
+    setKnowledgebases([])
+    setActiveKbId(null)
   }
 
   const loadTopics = useCallback(async () => {
@@ -66,9 +72,26 @@ export default function App() {
     } catch (e) { console.error(e) }
   }, [])
 
+  const loadKbs = useCallback(async () => {
+    if (!token) return
+    try {
+      const data = await api.getKnowledgebases()
+      setKnowledgebases(data)
+    } catch (e) { console.error(e) }
+  }, [token])
+
+  const loadKbFiles = useCallback(async (kbId) => {
+    try {
+      const data = await api.getKbFiles(kbId)
+      setKbFiles((prev) => ({ ...prev, [kbId]: data }))
+    } catch (e) { console.error(e) }
+  }, [])
+
   useEffect(() => { loadTopics() }, [token])
+  useEffect(() => { loadKbs() }, [token])
   useEffect(() => { loadChats(activeTopicId) }, [activeTopicId, token])
   useEffect(() => { loadMessages(activeChatId) }, [activeChatId, token])
+  useEffect(() => { if (activeKbId) loadKbFiles(activeKbId) }, [activeKbId])
 
   useEffect(() => {
     if (!token) return
@@ -135,8 +158,8 @@ export default function App() {
     setMessages((prev) => [...prev, { id: Date.now(), role: 'user', content, chat_id: chatId }])
 
     try {
-      const result = await api.sendMessage(chatId, content)
-      setMessages((prev) => [...prev, result.assistant_message])
+      const result = await api.sendMessage(chatId, content, activeKbId)
+      setMessages((prev) => [...prev, { ...result.assistant_message, tool_calls: result.tool_calls }])
       loadChats(activeTopicId)
     } catch (e) { console.error(e) }
     setSending(false)
@@ -175,6 +198,39 @@ export default function App() {
     } catch (e) { console.error(e) }
   }
 
+  const handleCreateKb = async () => {
+    const name = prompt('Knowledgebase name:')
+    if (!name) return
+    const mode = prompt('Retrieval mode (fulltext / vector / hybrid):', 'hybrid')
+    try {
+      const kb = await api.createKnowledgebase({ name, retrieval_mode: mode || 'hybrid' })
+      setKnowledgebases((prev) => [...prev, kb])
+    } catch (e) { alert('Failed to create KB: ' + e.message) }
+  }
+
+  const handleDeleteKb = async (id) => {
+    if (!confirm('Delete this knowledgebase?')) return
+    await api.deleteKnowledgebase(id)
+    setKnowledgebases((prev) => prev.filter((k) => k.id !== id))
+    if (activeKbId === id) setActiveKbId(null)
+  }
+
+  const handleImportToKb = async (kbId, file) => {
+    try {
+      const result = await api.importToKb(kbId, file)
+      if (result.status === 'completed') {
+        alert(`Imported "${file.name}" — ${result.chunks} chunks created`)
+        loadKbFiles(kbId)
+      } else if (result.status === 'skipped') {
+        alert(`Skipped — "${file.name}" already exists in this knowledgebase`)
+      } else {
+        alert(`Import failed: ${result.error}`)
+      }
+    } catch (e) { alert('Import error: ' + e.message) }
+  }
+
+  const activeKb = knowledgebases.find((k) => k.id === activeKbId) || null
+
   if (!token) {
     return <AuthPage onAuth={handleAuth} />
   }
@@ -196,6 +252,13 @@ export default function App() {
         onLogout={handleLogout}
         driveConnected={driveConnected}
         token={token}
+        knowledgebases={knowledgebases}
+        activeKbId={activeKbId}
+        onSelectKb={setActiveKbId}
+        onCreateKb={handleCreateKb}
+        onDeleteKb={handleDeleteKb}
+        onImportToKb={handleImportToKb}
+        kbFiles={kbFiles}
       />
       <ChatArea
         messages={messages}
@@ -203,6 +266,7 @@ export default function App() {
         onSend={handleSend}
         onUpload={handleUpload}
         chatTitle={chats.find((c) => c.id === activeChatId)?.title}
+        activeKb={activeKb}
       />
     </div>
   )

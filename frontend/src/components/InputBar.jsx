@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react'
 
+const ACCEPT_TYPES = ".pdf,.docx,.pptx,.html,.htm,.csv,.xls,.xlsx,.json,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
+
 export default function InputBar({ onSend, onUpload, disabled }) {
   const [text, setText] = useState('')
   const fileRef = useRef(null)
@@ -34,7 +36,7 @@ export default function InputBar({ onSend, onUpload, disabled }) {
       <input
         ref={fileRef}
         type="file"
-        accept=".pdf"
+        accept={ACCEPT_TYPES}
         onChange={handleFile}
         style={{ display: 'none' }}
       />

@@ -16,3 +16,9 @@ pypdf
 python-multipart
 bcrypt
 pyjwt
+opensearch-py
+openai
+pymupdf
+pandas
+markitdown
+tiktoken

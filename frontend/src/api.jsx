@@ -29,5 +29,23 @@ export const api = {
   deleteChat: (id) => req(`/chats/${id}`, { method: 'DELETE' }),
 
   getMessages: (chatId) => req(`/chats/${chatId}/messages`),
-  sendMessage: (chatId, content) => req(`/chats/${chatId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+  sendMessage: (chatId, content, kbId) => {
+    let url = `/chats/${chatId}/messages`
+    if (kbId) url += `?kb_id=${kbId}`
+    return req(url, { method: 'POST', body: JSON.stringify({ content }) })
+  },
+
+  getKnowledgebases: () => req('/knowledgebases'),
+  createKnowledgebase: (data) => req('/knowledgebases', { method: 'POST', body: JSON.stringify(data) }),
+  deleteKnowledgebase: (id) => req(`/knowledgebases/${id}`, { method: 'DELETE' }),
+  getKbFiles: (id) => req(`/knowledgebases/${id}/files`),
+  importToKb: (id, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return fetch(`/api/knowledgebases/${id}/import`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${_token}` },
+      body: formData,
+    }).then(r => r.json())
+  },
 }

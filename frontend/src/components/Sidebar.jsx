@@ -1,10 +1,15 @@
-import React, { useCallback } from 'react'
+import React, { useState, useRef } from 'react'
+
+const ACCEPT_TYPES = ".pdf,.docx,.pptx,.html,.htm,.csv,.xls,.xlsx,.json,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
 
 export default function Sidebar({
   topics, activeTopicId, onSelectTopic, onCreateTopic, onDeleteTopic,
   chats, activeChatId, onSelectChat, onCreateChat, onDeleteChat,
   userEmail, onLogout, driveConnected, token,
+  knowledgebases, activeKbId, onSelectKb, onCreateKb, onDeleteKb, onImportToKb, kbFiles,
 }) {
+  const fileRefs = useRef({})
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -57,6 +62,43 @@ export default function Sidebar({
           </ul>
         </div>
       )}
+
+      <div className="sidebar-section">
+        <h3>Knowledgebases</h3>
+        <button className="btn-small" onClick={onCreateKb}>+ Create KB</button>
+        <ul className="kb-list">
+          {knowledgebases.map((kb) => (
+            <li
+              key={kb.id}
+              className={kb.id === activeKbId ? 'active' : ''}
+              onClick={() => onSelectKb(kb.id)}
+            >
+              <div className="kb-info">
+                <span className="kb-name">{kb.name}</span>
+                <span className="kb-mode">{kb.retrieval_mode}</span>
+              </div>
+              <div className="kb-actions">
+                <button className="btn-icon" onClick={(e) => {
+                  e.stopPropagation()
+                  fileRefs.current[kb.id]?.click()
+                }} title="Import file">+</button>
+                <button className="btn-icon" onClick={(e) => { e.stopPropagation(); onDeleteKb(kb.id) }} title="Delete KB">×</button>
+              </div>
+              <input
+                ref={(el) => fileRefs.current[kb.id] = el}
+                type="file"
+                accept={ACCEPT_TYPES}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) onImportToKb(kb.id, f)
+                  e.target.value = ''
+                }}
+                style={{ display: 'none' }}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
     </aside>
   )
 }

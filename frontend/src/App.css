@@ -399,6 +399,132 @@ li:hover .btn-icon { opacity: 1; }
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
+/* Tool Calls */
+.bubble-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 85%;
+}
+
+.tool-calls {
+  font-size: 12px;
+}
+
+.tool-toggle {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  color: #888;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.tool-toggle:hover {
+  color: #ccc;
+  border-color: #555;
+}
+
+.tool-log {
+  margin-top: 4px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.tool-entry {
+  padding: 3px 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.tool-entry:last-child { border-bottom: none; }
+
+.tool-name {
+  color: #4ec9b0;
+  font-weight: 600;
+}
+
+.tool-args {
+  color: #888;
+  margin-left: 6px;
+}
+
+.tool-result {
+  color: #aaa;
+  margin-top: 2px;
+  padding-left: 8px;
+  border-left: 2px solid #444;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Knowledgebase */
+.kb-list {
+  list-style: none;
+}
+
+.kb-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.kb-list li:hover { background: #2a2a2a; }
+
+.kb-list li.active { background: #2c6b9e33; color: #fff; }
+
+.kb-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.kb-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-mode {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kb-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.kb-badge {
+  font-size: 11px;
+  background: #2c6b9e33;
+  color: #2c6b9e;
+  border: 1px solid #2c6b9e55;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: 12px;
+}
+
+.welcome-kb {
+  font-size: 14px;
+  margin-top: 8px;
+  color: #888;
+}
+
 /* Input Bar */
 .input-bar {
   display: flex;
